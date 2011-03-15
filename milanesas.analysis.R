@@ -42,7 +42,6 @@ data$gram     = as.factor(data$gram)
 data$number   = as.factor(data$number)
 data$verbtype = as.factor(data$verbtype)
 
-
 attach(data)
 
 	# Data cleanup
@@ -73,10 +72,24 @@ attach(data)
 
 detach(data)
 
-##### RELCLAUSE VERB barplot
+##### RELCLAUSE GROUPED barplot
 
-pdf ("Agreement results.pdf")
-#par(mfrow=c(2,1))
+xtab.relclause = xtabs(formula = ~ resp + gram + number, data = data.relclause)    #why formula?  
+																							 # for resp, "N"=1 & "Y"=2
+stats <-t(xtab.relclause[2,,]/apply(xtab.relclause,2:3,sum))
+
+print ("Stats Grouped")
+print(stats*100)
+
+barplot(t(xtab.relclause[2,,]/apply(xtab.relclause,2:3,sum))*100, ylim=c(0,100), beside=T, bty="n",
+    main        = "RC Grouped", 
+    legend.text = c("Singular attractor",  "Plural attractor"), 
+    ylab        = "Percent 'Y' responses", 
+    names       = c("Grammatical",  "Ungrammatical")
+		)
+axis(2, seq(0, 100, 10))
+
+##### RELCLAUSE VERB barplot
 
 xtab.relclause.verb = xtabs(formula = ~ resp + gram + number, data = data.relclause.verb)    #why formula?  
 																							 # for resp, "N"=1 & "Y"=2
@@ -109,7 +122,6 @@ barplot(t(xtab.relclause.aux[2,,]/apply(xtab.relclause.aux,2:3,sum))*100, ylim=c
 	)
 axis(2, seq(0, 100, 10))
 
-dev.off()
 
 ##### Data summary   
 
