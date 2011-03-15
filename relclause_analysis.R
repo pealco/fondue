@@ -99,14 +99,7 @@ relclause.items = subset(items, Trial_type == "RELCLAUSE")
 relclause = subset(fondue.exc, Trial_type == "RELCLAUSE")
 
 #Add order column
-relclause$Order = rep(0, nrow(relclause))
-ssno = unique(relclause[,c("Subject", "Item_number")])
-for (i in 1:nrow(ssno)) {
-    subj = ssno[i, "Subject"]
-    sno = ssno[i, "Item_number"]  
-    relclause[relclause$Subject==subj & relclause$Item_number==sno, "Order"] =
-	relclause.items[relclause.items$Subject == subj & relclause.items$Item_number == sno, "Order"]
-}
+relclause = merge(relclause, relclause.items)
 
 #Exclude the RT for the questions
 relclause.nq = relclause [relclause$Position != "?",]
