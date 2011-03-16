@@ -1,4 +1,4 @@
-library(lme4)
+#library(lme4)
 library(ggplot2)
 
 import.data = function(filename) {
@@ -42,100 +42,30 @@ data$gram     = as.factor(data$gram)
 data$number   = as.factor(data$number)
 data$verbtype = as.factor(data$verbtype)
 
-attach(data)
+# Data cleanup
+data.relclause.verb = subset(data, rt > 50 & rt < 2000 & experiment == "RELCLAUSE" & verbtype == "verb")
 
-	# Data cleanup
-
-    filt.all            = which(rt > 50 & rt < 2000)
-    filt.fillers        = which(rt > 50 & rt < 2000 & experiment == "filler")
-    filt.relclause      = which(rt > 50 & rt < 2000 & experiment == "RELCLAUSE")
-    filt.relclause.verb = which(rt > 50 & rt < 2000 & experiment == "RELCLAUSE" & verbtype == "verb")
-    filt.relclause.aux  = which(rt > 50 & rt < 2000 & experiment == "RELCLAUSE" & verbtype == "aux")
-    
-    data.all = data[filt.all, ]
-    data.fillers = data[filt.fillers, ]
-    
-    data.relclause = data[filt.relclause,]
-    
-        data.relclause$condition      = data.relclause$condition[drop=T]
-        data.relclause$resp           = data.relclause$resp[drop=T]
-    
-    data.relclause.verb = data[filt.relclause.verb,]
-
-        data.relclause.verb$condition = data.relclause.verb$condition[drop=T]
-        data.relclause.verb$resp      = data.relclause.verb$resp[drop=T]
-        
-    data.relclause.aux  = data[filt.relclause.aux, ]
-
-        data.relclause.aux$condition  = data.relclause.aux$condition[drop=T]
-        data.relclause.aux$resp       = data.relclause.aux$resp[drop=T]
-
-detach(data)
-
-##### RELCLAUSE GROUPED barplot
-
-xtab.relclause = xtabs(formula = ~ resp + gram + number, data = data.relclause)    #why formula?  
-																							 # for resp, "N"=1 & "Y"=2
-stats <-t(xtab.relclause[2,,]/apply(xtab.relclause,2:3,sum))
-
-print ("Stats Grouped")
-print(stats*100)
-
-barplot(t(xtab.relclause[2,,]/apply(xtab.relclause,2:3,sum))*100, ylim=c(0,100), beside=T, bty="n",
-    main        = "RC Grouped", 
-    legend.text = c("Singular attractor",  "Plural attractor"), 
-    ylab        = "Percent 'Y' responses", 
-    names       = c("Grammatical",  "Ungrammatical")
-		)
-axis(2, seq(0, 100, 10))
+data.relclause.verb$condition = data.relclause.verb$condition[drop=T]
+data.relclause.verb$resp      = data.relclause.verb$resp[drop=T]
 
 ##### RELCLAUSE VERB barplot
 
-xtab.relclause.verb = xtabs(formula = ~ resp + gram + number, data = data.relclause.verb)    #why formula?  
-																							 # for resp, "N"=1 & "Y"=2
-stats.verb <-t(xtab.relclause.verb[2,,]/apply(xtab.relclause.verb,2:3,sum))
+xtab.relclause.verb = xtabs(formula = ~ resp + gram + number, data = data.relclause.verb)
+stats.verb = xtab.relclause.verb[2,,]/apply(xtab.relclause.verb,2:3,sum) * 100
 
-print ("Stats Main Verb")
-print(stats.verb*100)
+stats.verb.melt = melt(stats.verb)
 
-barplot(t(xtab.relclause.verb[2,,]/apply(xtab.relclause.verb,2:3,sum))*100, ylim=c(0,100), beside=T, bty="n",
-    main        = "RC with Main Verb", 
-    legend.text = c("Singular attractor",  "Plural attractor"), 
-    ylab        = "Proportion 'Y' responses", 
-    names       = c("Grammatical",  "Ungrammatical")
-		)
-axis(2, seq(0, 100, 10))
+ggplot(stats.verb.melt, aes(gram)) +
+geom_bar(aes(y=value*100, fill=number), position="dodge")  +
+scale_fill_grey("Attractor", breaks = c("a-sg", "b-pl"), labels = c("Singular", "Plural")) +
+scale_x_discrete("", breaks = c("gram", "ungram"), labels = c("Grammatical", "Ungrammatical")) +
+scale_y_continuous("Proportion Y responses", limits = c(0, 100)) +
+coord_cartesian(ylim = c(0,100)) + 
+theme_bw()
 
-##### RELCLAUSE AUX barplot
-
-xtab.relclause.aux = xtabs(formula = ~ resp + gram + number,  data = data.relclause.aux)     
-stats.aux <- t(xtab.relclause.aux[2,,]/apply(xtab.relclause.aux,2:3,sum))
-
-print ("Stats Auxiliary")
-print(stats.aux*100)
-
-barplot(t(xtab.relclause.aux[2,,]/apply(xtab.relclause.aux,2:3,sum))*100, ylim=c(0,100), beside=T, bty="n",
-    main        = "RC with Auxiliary", 
-    legend.text = c("Singular attractor",  "Plural attractor"), 
-    ylab        = "Proportion 'Y' responses", 
-    names       = c("Grammatical",  "Ungrammatical")
-	)
-axis(2, seq(0, 100, 10))
-
-
-##### Data summary   
-
-length(data.all[,1])/length(data[,1]) #Data remaining after filtering
-
-summary(data.all)
-
+#opts(panel.background = theme_blank())
 
 ##### The models
 
-lm.relclause        = lmer(resp ~ gram/number + (1|subject) + (1|item), data = data.relclause,      family="binomial")
-lm.relclause.verb   = lmer(resp ~ gram/number + (1|subject) + (1|item), data = data.relclause.verb, family="binomial")
-lm.relclause.aux    = lmer(resp ~ gram/number + (1|subject) + (1|item), data = data.relclause.aux,  family="binomial")
-
-summary(lm.relclause)
-summary(lm.relclause.verb)
-summary(lm.relclause.aux)
+#lm.relclause.verb   = lmer(resp ~ gram/number + (1|subject) + (1|item), data = data.relclause.verb, family="binomial")
+#summary(lm.relclause.verb)

@@ -19,11 +19,11 @@ error.bar = function(x, upper, lower=upper, length=0.1,...){
 }
 
 trim.outliers = function(data) {
-  means = tapply(data$RT, data$Region [drop=TRUE], mean)
-  stds = sqrt(tapply(data$RT, data$Region [drop=TRUE], var))
-  mins = means - MAX.SD*(stds)
+  means = tapply(data$RT, data$Region[drop=TRUE], mean)
+  stds = sqrt(tapply(data$RT, data$Region[drop=TRUE], var))
+  mins = means - MAX.SD * (stds)
   mins.full = mins[as.character(data$Region)]
-  maxs = means + MAX.SD*(stds)
+  maxs = means + MAX.SD * (stds)
   maxs.full = maxs[as.character(data$Region)]
   data.cor = data[data$RT >= mins.full & data$RT <= maxs.full,]
   return(data.cor)
@@ -102,7 +102,7 @@ relclause = subset(fondue.exc, Trial_type == "RELCLAUSE")
 relclause = merge(relclause, relclause.items)
 
 #Exclude the RT for the questions
-relclause.nq = relclause [relclause$Position != "?",]
+relclause.nq = subset(relclause, Position != "?")
 
 #Rename/merge the labels "02atti"& "02atta" to "02att"
 relclause.nq$Region = as.character(relclause.nq$Region)
@@ -110,12 +110,9 @@ relclause.nq[relclause.nq$Region == "02atti" | relclause.nq$Region == "02atta" ,
 relclause.nq$Region = factor(relclause.nq$Region)
 
 #Add useful columns to describe conditions: Grammaticality, Number and Animacy
-relclause.nq$Gram =with(relclause.nq, Condition == "c" | Condition == "d" |
-                                       Condition == "g" | Condition == "h")
-relclause.nq$Plural =with(relclause.nq, Condition == "b" | Condition == "d" |
-                                         Condition == "f" | Condition == "h")
-relclause.nq$Animate =with(relclause.nq, Condition == "e" | Condition == "f" |
-                                          Condition == "g" | Condition == "h")
+relclause.nq$Gram    = with(relclause.nq, Condition == "c" | Condition == "d" | Condition == "g" | Condition == "h")
+relclause.nq$Plural  = with(relclause.nq, Condition == "b" | Condition == "d" | Condition == "f" | Condition == "h")
+relclause.nq$Animate = with(relclause.nq, Condition == "e" | Condition == "f" | Condition == "g" | Condition == "h")
 
 										  
 #Add gender column to code for the relationship betweem the two NPs
@@ -143,22 +140,22 @@ relclause.nq$Gender = gender[relclause.nq$Item_number]  #this column say which w
 relclause.nq$Length = nchar(as.character(relclause.nq$Word))
 
 #Exclude sentences with error responses
-relclause.q = relclause [relclause$Position == "?",]
-excluded.trials = which(relclause.q$Region==0)
+relclause.q = subset(relclause, Position == "?")
+excluded.trials = which(relclause.q$Region == 0)
 subj.sno.full = list()
 
-	for (i in 1:length(excluded.trials)) {
-		t = excluded.trials[i]
-		subj.sno.full[[i]] = unlist(c(relclause.q[t,c("Subject", "Item_number")]))
-		}
-	exclude.condl = rep(FALSE, nrow(relclause.nq))
+for (i in 1:length(excluded.trials)) {
+	t = excluded.trials[i]
+	subj.sno.full[[i]] = unlist(c(relclause.q[t,c("Subject", "Item_number")]))
+	}
+exclude.condl = rep(FALSE, nrow(relclause.nq))
 
-	for (ssn in subj.sno.full) {
-		subj = ssn[1]
-		sno = ssn[2]
-		exclude.condl = exclude.condl |
-						(relclause.nq$Subject == subj & relclause.nq$Item_number == sno)
-		}
+for (ssn in subj.sno.full) {
+	subj = ssn[1]
+	sno = ssn[2]
+	exclude.condl = exclude.condl |
+					(relclause.nq$Subject == subj & relclause.nq$Item_number == sno)
+	}
 
 relclause.nq = relclause.nq[!exclude.condl,]  #THIS IS THE FINAL DATAFRAME
 
@@ -179,61 +176,32 @@ for (s in unique(relclause.nq$Subject)) {
 # relclause.nq$RT = resid(m)
 
 #select only the regions I want
-regions = c("01det1", "02att", "03que", "04det2", "05suj", "06v1", "07prep", "08det3", "09noun", 
-			 "10v2", "11v3","end1")
-
-####################################################################################################
-#Write tables for QMPE
-#NOTE: for each file I need to MANUALLY modify "regions_number.p": (1) change name of input file and 
-		#(2) change the name of the output file
-
-#Save condition levels
-#I save it as Condition 2 because I'm collapsing 4 conditions into 2 (collapsing animacy)
-
-relclause.nq$Condition2 = as.factor(paste(as.character(relclause.nq$Gram), 
-											as.character(relclause.nq$Plural), sep=""))
-condition.levels = levels(relclause.nq$Condition2)
-
-#name of output files
-relclause.nq$Condition2 = as.numeric(relclause.nq$Condition2)
-relclause.nq = relclause.nq[order(relclause.nq$Condition2),]
-#relclause.nq$RT = relclause.nq$RT + 500  #this adds a constant of 500 ms to the regressed RTs
-
-#write.table(relclause.nq[relclause.nq$Region=="05suj",c("Condition2", "RT")],"relclause_05suj.txt", 
-#		row.names=F, col.names=F)
-#write.table(relclause.nq[relclause.nq$Region=="06v1",c("Condition2", "RT")],"relclause_06v1.txt", 
-#		row.names=F, col.names=F)
-#write.table(relclause.nq[relclause.nq$Region=="07prep",c("Condition2", "RT")],"relclause_07prep.txt", 
-#		row.names=F, col.names=F)
-#####################################################################################################
+regions = c("01det1", "02att", "03que", "04det2", "05suj", "06v1", "07prep", "08det3", "09noun")
 
 #Separate the ANIMACY manipulation & calculate RTs for each condition within each animacy condition
 anim.val = list(T, F, c(T, F))
 anim.str = c("Animate", "Inanimate", "Pooled")
 
-all = NULL
+relclause.c = subset(relclause.nq, Region %in% regions)
+relclause.c$Region = relclause.c$Region[drop=T]
+
+#locate each condition
+
+sg.gram   = trim.outliers(subset(relclause.c, Gram == T & Plural == F))	
+sg.ungram = trim.outliers(subset(relclause.c, Gram == F & Plural == F))
+pl.gram   = trim.outliers(subset(relclause.c, Gram == T & Plural == T))
+pl.ungram = trim.outliers(subset(relclause.c, Gram == F & Plural == T))
+
+all = rbind(sg.gram, sg.ungram, pl.gram, pl.ungram)
+
+group.cond = data.frame(GroupedCondition = c("SG Gram", "SG Ungram", "PL Gram", "PL Ungram", "SG Gram", "SG Ungram", "PL Gram", "PL Ungram"), 
+                        Condition = c("c", "a", "d", "b", "g", "e", "h", "f"))
+
+all = merge(all, group.cond)
+
+all.p = ddply(all, .(Region, GroupedCondition), summarize, mean_rt = mean(RT), ci_hi= mean(RT) + 2*sd(RT), ci_lo=mean(RT) - 2*sd(RT))
 
 
-for (i in 1:3) {
-	print(anim.str[i])
-	relclause.c = relclause.nq[relclause.nq$Animate %in% anim.val[[i]],]
-	
-	#locate each condition
-
-	sg.gram = trim.outliers(relclause.c [relclause.c$Gram == TRUE & relclause.c$Plural == FALSE, ])	
-	sg.ungram = trim.outliers(relclause.c [relclause.c$Gram == FALSE & relclause.c$Plural == FALSE, ])
-	pl.gram = trim.outliers(relclause.c [relclause.c$Gram == TRUE & relclause.c$Plural == TRUE, ])
-	pl.ungram = trim.outliers(relclause.c [relclause.c$Gram == FALSE & relclause.c$Plural == TRUE, ])
-	
-  
-	all.a = rbind(sg.gram, sg.ungram, pl.gram, pl.ungram)
-	if (anim.str[i] %in% c("Animate", "Inanimate")) {
-		if (is.null(all)) {
-			all = all.a
-		} else {
-			all = rbind(all, all.a)
-		}
-	}
 	
 	sg.gram.stat = compute.stats(sg.gram)
 	sg.ungram.stat = compute.stats(sg.ungram)
@@ -310,9 +278,6 @@ for (i in 1:3) {
 	points (pl.ungram.stat[regions,"Mean"], type="b", pch=21, col= "red")
 	error.bar (1:12, pl.ungram.stat[regions,"+SEM"], pl.ungram.stat[regions,"-SEM"],lty=2, col= "red")
  
- 
- #dev.off()
-}
 
 #Stats for item using Animacy as a factor (three way interactions)
 
