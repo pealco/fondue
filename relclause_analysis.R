@@ -1,3 +1,5 @@
+library(ggplot2)
+
 MAX.SD = 2.5
 
 round.to.nearest = function(x, p) {
@@ -200,3 +202,5 @@ group.cond = data.frame(GroupedCondition = c("SG Gram", "SG Ungram", "PL Gram", 
 all = merge(all, group.cond)
 
 all.p = ddply(all, .(Region, GroupedCondition), summarize, mean_rt = mean(RT), ci_hi= mean(RT) + 2*sd(RT), ci_lo=mean(RT) - 2*sd(RT))
+
+write.csv(all.p, "relclause.plottable.csv")
