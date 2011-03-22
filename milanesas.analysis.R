@@ -56,12 +56,13 @@ stats.verb = xtab.relclause.verb[2,,]/apply(xtab.relclause.verb,2:3,sum) * 100
 stats.verb.melt = melt(stats.verb)
 
 ggplot(stats.verb.melt, aes(gram)) +
-geom_bar(aes(y=value*100, fill=number), position="dodge")  +
+geom_bar(aes(y=value, fill=number), position="dodge")  +
 scale_fill_grey("Attractor", breaks = c("a-sg", "b-pl"), labels = c("Singular", "Plural")) +
 scale_x_discrete("", breaks = c("gram", "ungram"), labels = c("Grammatical", "Ungrammatical")) +
-scale_y_continuous("Proportion Y responses", limits = c(0, 100)) +
+scale_y_continuous("", limits = c(0, 100)) +
 coord_cartesian(ylim = c(0,100)) + 
-theme_bw()
+theme_bw() +
+opts(legend.position="none")
 
 #opts(panel.background = theme_blank())
 

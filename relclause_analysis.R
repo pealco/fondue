@@ -167,11 +167,11 @@ relclause.nq = relclause.nq[!exclude.condl,]  #THIS IS THE FINAL DATAFRAME
 
 
 #Pull off subject means
-for (s in unique(relclause.nq$Subject)) {
-  rts = relclause.nq[relclause.nq$Subject == s, "RT"]
-  mean = mean(rts)
-  relclause.nq[relclause.nq$Subject == s,"RT"] = rts - mean
-}
+#for (s in unique(relclause.nq$Subject)) {
+#  rts = relclause.nq[relclause.nq$Subject == s, "RT"]
+#  mean = mean(rts)
+#  relclause.nq[relclause.nq$Subject == s,"RT"] = rts - mean
+#}
 
 #Regress out nuisance factors
 # m = lm(RT ~ Length*Order, data=relclause.nq)
@@ -198,9 +198,46 @@ all = rbind(sg.gram, sg.ungram, pl.gram, pl.ungram)
 
 group.cond = data.frame(GroupedCondition = c("SG Gram", "SG Ungram", "PL Gram", "PL Ungram", "SG Gram", "SG Ungram", "PL Gram", "PL Ungram"), 
                         Condition = c("c", "a", "d", "b", "g", "e", "h", "f"))
+                        
+gram.cond = data.frame(gram = c("gram", "ungram", "gram", "ungram", "gram", "ungram", "gram", "ungram"), 
+                        Condition = c("c", "a", "d", "b", "g", "e", "h", "f"))
+
+number.cond = data.frame(number = c("SG", "SG", "PL", "PL", "SG", "SG", "PL", "PL"), 
+                        Condition = c("c", "a", "d", "b", "g", "e", "h", "f"))
+                        
 
 all = merge(all, group.cond)
+all = merge(all, gram.cond)
+all = merge(all, number.cond)
 
-all.p = ddply(all, .(Region, GroupedCondition), summarize, mean_rt = mean(RT), ci_hi= mean(RT) + 2*sd(RT), ci_lo=mean(RT) - 2*sd(RT))
+data = ddply(all, .(Region, GroupedCondition, gram, number), summarize, mean_rt = mean(RT), se = sd(RT)/sqrt(length(Subject)))
 
-write.csv(all.p, "relclause.plottable.csv")
+write.csv(data, "relclause.plottable.csv")
+
+colors = c("PL Gram" = "black", "PL Ungram" = "red", "SG Gram" = "black", "SG Ungram" = "red")
+linetypes = c("PL Gram" = "dashed", "PL Ungram" = "dashed", "SG Gram" = "solid", "SG Ungram" = "solid")
+shapes = c("PL Gram" = 1, "PL Ungram" = 1, "SG Gram" = 16, "SG Ungram" = 16)
+limits = aes(ymax = mean_rt + se, ymin = mean_rt - se)
+
+ggplot(data, aes(x=Region, y=mean_rt, color=GroupedCondition, shape=GroupedCondition)) + 
+    geom_line(aes(group=GroupedCondition, linetype=GroupedCondition)) +
+    geom_point() +
+    geom_errorbar(limits, width=0.2, alpha=I(0.4)) +
+    scale_color_manual("Condition", value = colors) + 
+    scale_linetype_manual("Condition", value = linetypes) +
+    scale_shape_manual("Condition", value=shapes) +
+    scale_x_discrete(breaks=regions, labels=c("DET", "NP", "que", "DET", "NP", "V", "PP", "DET", "NP")) +
+    labs(x="", y="") +
+    theme_bw() +
+    opts(legend.position="none")
+
+ggplot(data, aes(x=Region, y=mean_rt, color=GroupedCondition, linetype=GroupedCondition, shape=GroupedCondition)) + 
+    geom_line(aes(group=GroupedCondition)) +
+    geom_point() +
+    geom_errorbar(limits, width=0.2) +
+    scale_color_manual("Condition", value = colors) + 
+    scale_linetype_manual("Condition", value = linetypes) +
+    scale_shape_manual("Condition", value=shapes) +
+    scale_x_discrete(breaks=regions, labels=c("DET", "NP", "que", "DET", "NP", "V", "PP", "DET", "NP")) +
+    labs(x="", y="") +
+    theme_bw()
